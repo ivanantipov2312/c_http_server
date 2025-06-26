@@ -3,3 +3,4 @@
 - tcp connection
 - multithreading
 - thread pool
+- basic GET method handling and 404 NOT FOUND page
