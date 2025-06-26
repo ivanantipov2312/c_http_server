@@ -13,10 +13,10 @@
 #include "tpool.h"
 #include "utils.h"
 
-#define PORT "8080"
-#define BACKLOG 128
-#define MAX_REQUEST_LEN 512
-#define MAX_RESPONSE_LEN 1024
+#define PORT 			"8080"
+#define BACKLOG 		128
+#define MAX_REQUEST_LEN 	512
+#define TPOOL_THREAD_COUNT 	4
 
 bool get_listener_socket(const char *port, int backlog, int *sock_fd)
 {
@@ -99,7 +99,7 @@ int main(void)
 {
 	int sock_fd = -1;
 
-	struct tpool *pool = tpool_create(4);
+	struct tpool *pool = tpool_create(TPOOL_THREAD_COUNT);
 	if (pool == NULL)
 		return -1;
 
