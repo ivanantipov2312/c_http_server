@@ -13,6 +13,11 @@
 #include "tpool.h"
 #include "utils.h"
 
+#define PORT "8080"
+#define BACKLOG 128
+#define MAX_REQUEST_LEN 512
+#define MAX_RESPONSE_LEN 1024
+
 bool get_listener_socket(const char *port, int backlog, int *sock_fd)
 {
 	struct addrinfo hints;
@@ -72,6 +77,18 @@ void *handle_response(void *arg)
 	int client_fd = *(int *)arg;
 	free(arg);
 
+	char req[MAX_REQUEST_LEN];
+	recv(client_fd, req, MAX_REQUEST_LEN, 0);
+	char method[8], url[8], version[8];
+	sscanf(req, "%s %s %s", method, url, version);
+	printf("Method: '%s', URL: '%s', Version: '%s'\n", method, url, version);
+
+        if (strcmp(method, "GET") == 0 && strcmp(url, "/") == 0) {
+                send_file(client_fd, "HTTP/1.1 200 OK", "data/index.html");
+        } else {
+                send_file(client_fd, "HTTP/1.1 404 NOT FOUND", "data/404.html");
+        }
+
 	send(client_fd, "Hello\n", 6, 0);
 	close(client_fd);
 
@@ -81,17 +98,15 @@ void *handle_response(void *arg)
 int main(void)
 {
 	int sock_fd = -1;
-	const char *port = "8080";
-	int backlog = 128;
 
 	struct tpool *pool = tpool_create(4);
 	if (pool == NULL)
 		return -1;
 
-	if (!get_listener_socket(port, backlog, &sock_fd))
+	if (!get_listener_socket(PORT, BACKLOG, &sock_fd))
 		return -1;
 
-	printf("Waiting for connections on port %s with backlog %d...\n", port, backlog);
+	printf("Waiting for connections on port %s with backlog %d...\n", PORT, BACKLOG);
 
 	while (1) {
 		struct sockaddr_storage client_addr;
